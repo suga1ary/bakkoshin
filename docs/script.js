@@ -1,48 +1,180 @@
-const canvas = document.getElementById("board");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("board");
+const ctx=canvas.getContext("2d");
 
-const size = 15;
-const cell = 40;
+const size=15;
+const cell=40;
 
-let quantumMoves = [];
+let board=[];
+let backupBoard=[];
+let mode="place";
+let turn=1;
 
+for(let y=0;y<size;y++){
+ board[y]=[];
+ for(let x=0;x<size;x++){
+  board[y][x]=0;
+ }
+}
+
+updateStatus();
 drawBoard();
 
-canvas.addEventListener("click", e => {
+canvas.addEventListener("click",e=>{
 
- const rect = canvas.getBoundingClientRect();
+ if(mode!=="place")return;
 
- const x = Math.floor((e.clientX - rect.left) / cell);
- const y = Math.floor((e.clientY - rect.top) / cell);
+ const rect=canvas.getBoundingClientRect();
 
- quantumMoves.push({x,y});
+ const x=Math.floor((e.clientX-rect.left)/cell);
+ const y=Math.floor((e.clientY-rect.top)/cell);
 
- drawStone(x,y);
+ if(board[y][x]!==0)return;
+
+ board[y][x]=3;
+
+ drawBoard();
+
+ turn=turn===1?2:1;
+ updateStatus();
 });
 
-function drawBoard(){
+function setMode(m){
+
+ if(m==="observe"){
+  observe();
+ }else{
+  mode="place";
+ }
+
+ updateStatus();
+}
+
+function observe(){
+
+ backupBoard=JSON.parse(JSON.stringify(board));
+
+ animateObserve(0);
+}
+
+function animateObserve(step){
+
+ if(step<10){
+
+  drawBoard(true);
+  setTimeout(()=>animateObserve(step+1),100);
+  return;
+ }
+
+ for(let y=0;y<size;y++){
+  for(let x=0;x<size;x++){
+
+   if(board[y][x]===3){
+    board[y][x]=Math.random()<0.5?1:2;
+   }
+  }
+ }
+
+ drawBoard();
+
+ if(checkWin()){
+  alert("勝利！");
+ }else{
+  board=backupBoard;
+  drawBoard();
+ }
+
+ mode="place";
+ turn=turn===1?2:1;
+ updateStatus();
+}
+
+function drawBoard(flash=false){
+
+ ctx.clearRect(0,0,600,600);
 
  for(let i=0;i<size;i++){
 
   ctx.beginPath();
-  ctx.moveTo(cell/2, cell/2+i*cell);
-  ctx.lineTo(cell/2+(size-1)*cell, cell/2+i*cell);
+  ctx.moveTo(cell/2,cell/2+i*cell);
+  ctx.lineTo(cell/2+(size-1)*cell,cell/2+i*cell);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(cell/2+i*cell, cell/2);
-  ctx.lineTo(cell/2+i*cell, cell/2+(size-1)*cell);
+  ctx.moveTo(cell/2+i*cell,cell/2);
+  ctx.lineTo(cell/2+i*cell,cell/2+(size-1)*cell);
   ctx.stroke();
+ }
+
+ for(let y=0;y<size;y++){
+  for(let x=0;x<size;x++){
+
+   if(board[y][x]===0)continue;
+
+   ctx.beginPath();
+   ctx.arc(cell/2+x*cell,cell/2+y*cell,15,0,Math.PI*2);
+
+   if(board[y][x]===3){
+    ctx.globalAlpha=0.5;
+    if(flash){
+     ctx.fillStyle=Math.random()<0.5?"black":"white";
+    }else{
+     ctx.fillStyle="gray";
+    }
+   }
+
+   if(board[y][x]===1){
+    ctx.fillStyle="black";
+   }
+
+   if(board[y][x]===2){
+    ctx.fillStyle="white";
+   }
+
+   ctx.fill();
+   ctx.globalAlpha=1;
+   ctx.stroke();
+  }
  }
 }
 
-function drawStone(x,y){
+function checkWin(){
 
- ctx.globalAlpha = 0.5;
+ const dirs=[[1,0],[0,1],[1,1],[1,-1]];
 
- ctx.beginPath();
- ctx.arc(cell/2+x*cell, cell/2+y*cell, 15,0,Math.PI*2);
- ctx.fill();
+ for(let y=0;y<size;y++){
+  for(let x=0;x<size;x++){
 
- ctx.globalAlpha = 1;
+   const c=board[y][x];
+   if(c===0||c===3)continue;
+
+   for(const d of dirs){
+
+    let count=1;
+
+    for(let i=1;i<5;i++){
+
+     const nx=x+d[0]*i;
+     const ny=y+d[1]*i;
+
+     if(nx<0||ny<0||nx>=size||ny>=size)break;
+
+     if(board[ny][nx]===c){
+      count++;
+     }else{
+      break;
+     }
+    }
+
+    if(count>=5)return true;
+   }
+  }
+ }
+
+ return false;
+}
+
+function updateStatus(){
+
+ document.getElementById("status").innerText=
+  "ターン:"+(turn===1?"黒":"白")+" モード:"+mode;
 }

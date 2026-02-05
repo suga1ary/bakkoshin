@@ -9,8 +9,16 @@
 <body>
 
 <h1>量子五目並べ</h1>
+
+<div class="controls">
+<button onclick="setMode('place')">石を置く</button>
+<button onclick="setMode('observe')">観測する</button>
+<span id="status"></span>
+</div>
+
 <canvas id="board" width="600" height="600"></canvas>
 
 <script src="script.js"></script>
+
 </body>
 </html>

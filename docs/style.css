@@ -5,4 +5,9 @@ body{
 
 canvas{
  border:2px solid black;
+ margin-top:10px;
+}
+
+.controls{
+ margin:10px;
 }
