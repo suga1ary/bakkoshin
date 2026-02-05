@@ -6,8 +6,9 @@ const cell=40;
 
 let board=[];
 let backupBoard=[];
+
 let mode="place";
-let turn=1;
+let turn=1; //1黒 2白
 
 for(let y=0;y<size;y++){
  board[y]=[];
@@ -30,23 +31,21 @@ canvas.addEventListener("click",e=>{
 
  if(board[y][x]!==0)return;
 
- board[y][x]=3;
-
- drawBoard();
+ board[y][x]=3; //量子石
 
  turn=turn===1?2:1;
+
+ drawBoard();
  updateStatus();
 });
 
 function setMode(m){
-
- if(m==="observe"){
-  observe();
- }else{
-  mode="place";
- }
-
+ mode=m;
  updateStatus();
+
+ if(mode==="observe"){
+  observe();
+ }
 }
 
 function observe(){
@@ -59,7 +58,6 @@ function observe(){
 function animateObserve(step){
 
  if(step<10){
-
   drawBoard(true);
   setTimeout(()=>animateObserve(step+1),100);
   return;
@@ -77,14 +75,14 @@ function animateObserve(step){
  drawBoard();
 
  if(checkWin()){
-  alert("勝利！");
+  alert("勝利："+(turn===1?"白":"黒"));
  }else{
   board=backupBoard;
   drawBoard();
  }
 
- mode="place";
  turn=turn===1?2:1;
+ mode="place";
  updateStatus();
 }
 
@@ -115,11 +113,9 @@ function drawBoard(flash=false){
 
    if(board[y][x]===3){
     ctx.globalAlpha=0.5;
-    if(flash){
-     ctx.fillStyle=Math.random()<0.5?"black":"white";
-    }else{
-     ctx.fillStyle="gray";
-    }
+    ctx.fillStyle=flash
+     ?(Math.random()<0.5?"black":"white")
+     :(turn===1?"black":"white");
    }
 
    if(board[y][x]===1){
@@ -176,5 +172,7 @@ function checkWin(){
 function updateStatus(){
 
  document.getElementById("status").innerText=
-  "ターン:"+(turn===1?"黒":"白")+" モード:"+mode;
+  "ターン:"+(turn===1?"黒":"白")+
+  " | モード:"+mode+
+  " | 量子石を置いて観測で確定";
 }
